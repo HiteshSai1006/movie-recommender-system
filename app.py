@@ -39,10 +39,19 @@ def recommend(movie):
         recommended_movies_posters.append(fetch_poster(movie_id))
     return recommended_movies,recommended_movies_posters
 
-movies_dict = pickle.load(open('movie_dict.pkl','rb'))
-movies  = pd.DataFrame(movies_dict)
+movies_dict = pickle.load(open('movie_dict.pkl', 'rb'))
+movies = pd.DataFrame(movies_dict)
 
-similarity = pickle.load(open('similarity_small.pkl', 'rb'))
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+@st.cache_resource
+def load_similarity(tags):
+    cv = CountVectorizer(max_features=5000, stop_words='english')
+    vectors = cv.fit_transform(tags)
+    return cosine_similarity(vectors).astype('float32')
+
+similarity = load_similarity(tuple(movies['tags'].fillna('').astype(str)))
 
 st.title('Movie Recommender System')
 
